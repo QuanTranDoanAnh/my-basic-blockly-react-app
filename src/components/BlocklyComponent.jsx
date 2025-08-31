@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as Blockly from 'blockly';
+import { javascriptGenerator } from 'blockly/javascript'; // Import the generator
 
 // Define the XML for the toolbox as a string.
 const toolboxXML = `
@@ -7,9 +8,6 @@ const toolboxXML = `
     <category name="Logic" colour="%{BKY_LOGIC_HUE}">
       <block type="controls_if"></block>
       <block type="logic_compare"></block>
-      <block type="logic_operation"></block>
-      <block type="logic_negate"></block>
-      <block type="logic_boolean"></block>
     </category>
     <category name="Loops" colour="%{BKY_LOOPS_HUE}">
       <block type="controls_repeat_ext">
@@ -20,36 +18,38 @@ const toolboxXML = `
         </value>
       </block>
     </category>
-    <category name="Math" colour="%{BKY_MATH_HUE}">
-      <block type="math_number"></block>
-      <block type="math_arithmetic"></block>
-    </category>
   </xml>
 `;
 
-function BlocklyComponent() {
+function BlocklyComponent({ onCodeChange }) { // Accept the onCodeChange prop
   const blocklyDiv = useRef(null);
   const primaryWorkspace = useRef(null);
 
   useEffect(() => {
     if (blocklyDiv.current && !primaryWorkspace.current) {
-      // Inject the Blockly editor
       primaryWorkspace.current = Blockly.inject(blocklyDiv.current, {
-        toolbox: toolboxXML, // Use the XML string here
+        toolbox: toolboxXML,
         renderer: 'zelos'
       });
+
+      // --- Add this event listener ---
+      // This function will be called every time the workspace changes.
+      const updateCode = () => {
+        const code = javascriptGenerator.workspaceToCode(primaryWorkspace.current);
+        onCodeChange(code); // Pass the generated code to the parent component
+      };
+      primaryWorkspace.current.addChangeListener(updateCode);
+      // --- End of new code ---
     }
 
-    // Cleanup function
     return () => {
       if (primaryWorkspace.current) {
         primaryWorkspace.current.dispose();
         primaryWorkspace.current = null;
       }
     };
-  }, []);
+  }, []); // onCodeChange is stable, no need to add to dependencies
 
-  // We only need the div for the workspace now.
   return <div ref={blocklyDiv} className="w-full h-full" />;
 }
 
