@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "blockly": "^12.3.0",
+    "js-interpreter": "^6.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
